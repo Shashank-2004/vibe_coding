@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Magic Writing Board ✨</title>
+<style>
+/* --- Your Original CSS (unchanged) --- */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Comic Sans MS','Chalkboard SE','Arial Rounded MT Bold',cursive,sans-serif;min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:2rem 1rem;position:relative;overflow-x:hidden}
+body::-webkit-scrollbar{width:16px}
+body::-webkit-scrollbar-track{background:rgba(255,255,255,0.05);border-radius:10px;margin:10px}
+body::-webkit-scrollbar-thumb{background:linear-gradient(135deg,#ffd700 0%,#ff6b6b 50%,#51cf66 100%);border-radius:10px;border:3px solid rgba(255,255,255,0.1);animation:scrollbarGlow 3s infinite alternate}
+body::-webkit-scrollbar-thumb:hover{background:linear-gradient(135deg,#ffed4e 0%,#ff8787 50%,#69db7c 100%);box-shadow:0 0 20px rgba(255,215,0,0.6)}
+@keyframes scrollbarGlow{0%{box-shadow:0 0 10px rgba(255,215,0,0.3)}100%{box-shadow:0 0 25px rgba(255,215,0,0.8)}}
+*{scrollbar-width:thin;scrollbar-color:#ffd700 rgba(255,255,255,0.05)}
+.star{position:fixed;background:white;border-radius:50%;animation:twinkle 3s infinite;pointer-events:none;z-index:1}
+@keyframes twinkle{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+.container{position:relative;z-index:10;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:2rem;padding:2.5rem;box-shadow:0 20px 60px rgba(0,0,0,0.4);border:2px solid rgba(255,255,255,0.1);max-width:1400px;width:95%;margin:0 auto 2rem auto}
+.header{text-align:center;margin-bottom:2rem;animation:slideDown .8s ease-out}
+@keyframes slideDown{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
+.title{font-size:2.8rem;color:#ffd700;text-shadow:0 0 20px rgba(255,215,0,0.5);margin-bottom:.5rem;animation:glow 2s infinite alternate}
+@keyframes glow{from{text-shadow:0 0 20px rgba(255,215,0,0.5)}to{text-shadow:0 0 30px rgba(255,215,0,0.8),0 0 40px rgba(255,215,0,0.6)}}
+.subtitle{font-size:1.3rem;color:#87ceeb;animation:fadeIn 1s ease-out .3s both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.canvas-container{position:relative;display:flex;flex-direction:column;align-items:center;animation:scaleIn .6s ease-out .4s both}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.canvas-label{display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#ffb6c1;margin-bottom:1.5rem;font-weight:bold}
+.pencil-icon{font-size:2.5rem;margin-right:.75rem;animation:bounce 1.5s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0) rotate(0deg)}25%{transform:translateY(-10px) rotate(-5deg)}75%{transform:translateY(-5px) rotate(5deg)}}
+#digitCanvas{border:5px solid #ffd700;border-radius:2rem;box-shadow:0 0 40px rgba(255,215,0,0.4),inset 0 0 30px rgba(255,255,255,0.1);background-color:white;cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><text y="20" font-size="20">✏</text></svg>') 0 24,crosshair;transition:all .3s ease;max-width:100%;height:auto}
+#digitCanvas:hover{box-shadow:0 0 60px rgba(255,215,0,0.6),inset 0 0 30px rgba(255,255,255,0.2);transform:scale(1.01)}
+.button-container{display:flex;gap:2rem;margin-top:2.5rem;justify-content:center;flex-wrap:wrap;animation:slideUp .8s ease-out .6s both}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.button{padding:1.2rem 3rem;border:none;border-radius:2rem;color:white;font-weight:bold;font-size:1.4rem;cursor:pointer;transition:all .3s ease;transform:scale(1);box-shadow:0 10px 25px rgba(0,0,0,0.3);position:relative;overflow:hidden}
+.button::before{content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:rgba(255,255,255,0.3);transform:translate(-50%,-50%);transition:width .6s,height .6s}
+.button:hover::before{width:350px;height:350px}
+.button:disabled{opacity:.5;cursor:not-allowed}
+.clear-button{background:linear-gradient(135deg,#ff6b6b 0%,#ff5252 100%)}
+.clear-button:hover:not(:disabled){background:linear-gradient(135deg,#ff5252 0%,#ff3838 100%);transform:scale(1.15) rotate(-3deg);box-shadow:0 15px 35px rgba(255,82,82,0.5)}
+.recognize-button{background:linear-gradient(135deg,#51cf66 0%,#37b24d 100%)}
+.recognize-button:hover:not(:disabled){background:linear-gradient(135deg,#37b24d 0%,#2f9e44 100%);transform:scale(1.15) rotate(3deg);box-shadow:0 15px 35px rgba(55,178,77,0.5)}
+.button:active:not(:disabled){transform:scale(.95)}
+#predictionDisplay{text-align:center;transition:all .5s ease;margin-top:3rem}
+.prediction-hidden{opacity:0;transform:scale(.8) translateY(-20px);max-height:0;overflow:hidden}
+.prediction-visible{opacity:1;transform:scale(1) translateY(0);max-height:500px}
+.prediction-content{background:linear-gradient(135deg,rgba(255,215,0,0.2) 0%,rgba(255,182,193,0.2) 100%);border-radius:2rem;padding:2.5rem;border:4px solid #ffd700;animation:celebratePulse 1s ease-out}
+@keyframes celebratePulse{0%{transform:scale(.5);opacity:0}50%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.prediction-text{font-size:1.8rem;color:#ffb6c1;margin-bottom:1rem}
+.prediction-value{display:block;color:#ffd700;font-size:4rem;margin-top:1.5rem;text-shadow:0 0 25px rgba(255,215,0,0.7);animation:popIn .6s cubic-bezier(0.68,-0.55,0.265,1.55);word-wrap:break-word}
+@keyframes popIn{0%{transform:scale(0)}100%{transform:scale(1)}}
+.emoji-celebration{font-size:3.5rem;display:inline-block;animation:spin 2s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@media(max-width:768px){.container{padding:1.5rem}.title{font-size:2rem}.subtitle{font-size:1rem}.button{padding:1rem 2rem;font-size:1.1rem}.canvas-label{font-size:1.3rem}.prediction-value{font-size:2.5rem}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1 class="title">✨ Magic Writing Board ✨</h1>
+<p class="subtitle">🎨 Draw any letters or words and watch the magic happen! 🌟</p>
+</div>
+<div class="canvas-container">
+<div class="canvas-label"><span class="pencil-icon">✏</span>Write Here!</div>
+<canvas id="digitCanvas" width="800" height="600"></canvas>
+</div>
+<div class="button-container">
+<button id="clearButton" class="button clear-button">🧹 Clear Canvas</button>
+<button id="recognizeButton" class="button recognize-button">🔮 Recognize!</button>
+</div>
+<div id="predictionDisplay" class="prediction-hidden">
+<div class="prediction-content">
+<span class="emoji-celebration">🎉</span>
+<div class="prediction-text"><strong>I see:</strong></div>
+<span id="predictionValue" class="prediction-value"></span>
+<div style="margin-top:1.5rem;font-size:1.5rem;">
+<span class="emoji-celebration" style="animation-delay:.2s;">⭐</span>
+<span class="emoji-celebration" style="animation-delay:.4s;">🌈</span>
+<span class="emoji-celebration" style="animation-delay:.6s;">✨</span>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+function createStars(){for(let i=0;i<50;i++){const star=document.createElement('div');star.className='star';star.style.width=Math.random()*3+1+'px';star.style.height=star.style.width;star.style.left=Math.random()*100+'%';star.style.top=Math.random()*100+'%';star.style.animationDelay=Math.random()*3+'s';document.body.appendChild(star);}}
+createStars();
+
+class DigitRecognizer {
+constructor(apiKey){
+this.apiKey=apiKey;
+this.apiUrl="https://vision.googleapis.com/v1/images:annotate";
+this.canvas=document.getElementById("digitCanvas");
+this.ctx=this.canvas.getContext("2d");
+this.clearButton=document.getElementById("clearButton");
+this.recognizeButton=document.getElementById("recognizeButton");
+this.predictionValue=document.getElementById("predictionValue");
+this.initCanvas();
+this.addEventListeners();
+}
+initCanvas(){
+this.ctx.fillStyle="white";
+this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+this.ctx.strokeStyle="#2563eb";
+this.ctx.lineWidth=18;
+this.ctx.lineCap="round";
+this.ctx.lineJoin="round";
+}
+addEventListeners(){
+this.canvas.addEventListener("mousedown",(e)=>this.startDrawing(e));
+this.canvas.addEventListener("mousemove",(e)=>this.draw(e));
+this.canvas.addEventListener("mouseup",()=>this.stopDrawing());
+this.canvas.addEventListener("mouseout",()=>this.stopDrawing());
+this.canvas.addEventListener("touchstart",(e)=>{e.preventDefault();this.startDrawingTouch(e);});
+this.canvas.addEventListener("touchmove",(e)=>{e.preventDefault();this.drawTouch(e);});
+this.canvas.addEventListener("touchend",()=>this.stopDrawing());
+this.canvas.addEventListener("touchcancel",()=>this.stopDrawing());
+this.clearButton.addEventListener("click",()=>this.clearCanvas());
+this.recognizeButton.addEventListener("click",()=>this.recognize());
+}
+startDrawing(e){this.isDrawing=true;this.lastPoint=this.getCoordinates(e);}
+startDrawingTouch(e){this.isDrawing=true;this.lastPoint=this.getTouchCoordinates(e);}
+draw(e){if(!this.isDrawing)return;const p=this.getCoordinates(e);this.drawLine(p);}
+drawTouch(e){if(!this.isDrawing)return;const p=this.getTouchCoordinates(e);this.drawLine(p);}
+drawLine(p){this.ctx.beginPath();this.ctx.moveTo(this.lastPoint.x,this.lastPoint.y);this.ctx.lineTo(p.x,p.y);this.ctx.stroke();this.lastPoint=p;}
+stopDrawing(){this.isDrawing=false;}
+clearCanvas(){
+this.ctx.fillStyle="white";
+this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+this.predictionValue.textContent="";
+const disp=document.getElementById("predictionDisplay");
+disp.classList.add("prediction-hidden");
+disp.classList.remove("prediction-visible");
+}
+async recognize(){
+this.recognizeButton.disabled=true;
+this.recognizeButton.textContent="🔮 Working Magic...";
+const imageData=this.canvas.toDataURL("image/png");
+const base64Image=imageData.split(",")[1];
+const requestBody={requests:[{image:{content:base64Image},features:[{type:"TEXT_DETECTION"}]}]};
+try{
+const response=await fetch(`${this.apiUrl}?key=${this.apiKey}`,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(requestBody)
+});
+const data=await response.json();
+let detectedText="";
+if(data.responses&&data.responses[0].fullTextAnnotation){
+detectedText=data.responses[0].fullTextAnnotation.text;
+}else if(data.responses&&data.responses[0].textAnnotations&&data.responses[0].textAnnotations.length>0){
+detectedText=data.responses[0].textAnnotations[0].description;
+}
+detectedText=detectedText.trim();
+if(detectedText){
+    // 🧮 Added math evaluation logic
+    const cleaned=detectedText.replace(/[^0-9+\-*/x÷]/g,'');
+    const expression=cleaned.replace(/x|×/gi,'*').replace(/÷/g,'/');
+    try{
+        const result=eval(expression);
+        if(!isNaN(result)){
+            this.predictionValue.textContent=`${expression} = ${result}`;
+        } else {
+            this.predictionValue.textContent=detectedText;
+        }
+    }catch(e){
+        this.predictionValue.textContent=detectedText;
+    }
+}else{
+    this.predictionValue.textContent="Hmm, try writing bigger! 🤔";
+}
+const disp=document.getElementById("predictionDisplay");
+disp.classList.remove("prediction-hidden");
+disp.classList.add("prediction-visible");
+setTimeout(()=>disp.scrollIntoView({behavior:"smooth",block:"nearest"}),100);
+}catch(err){
+console.error("Error:",err);
+this.predictionValue.textContent="Oops! Try again! 😊";
+}
+this.recognizeButton.disabled=false;
+this.recognizeButton.textContent="🔮 Recognize!";
+}
+getCoordinates(e){const r=this.canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+getTouchCoordinates(e){const r=this.canvas.getBoundingClientRect();return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};}
+}
+document.addEventListener("DOMContentLoaded",()=>{new DigitRecognizer("AIzaSyAECbW_sAgR_UXxaflxcvYfjAZZhJLCmPk");});
+</script>
+</body>
+</html>
