@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Magic Writing Board ✨</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI','Comic Sans MS','Chalkboard SE',cursive,sans-serif;min-height:100vh;background:linear-gradient(135deg,#0a0e27 0%,#1a1f3a 25%,#2d1b4e 50%,#1a1f3a 75%,#0a0e27 100%);background-size:400% 400%;animation:gradientShift 15s ease infinite;padding:2rem 1rem;position:relative;overflow-x:hidden;touch-action:pan-y}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.star{position:fixed;background:white;border-radius:50%;animation:twinkle 3s infinite;pointer-events:none;z-index:1}
+@keyframes twinkle{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+.floating-particle{position:fixed;width:4px;height:4px;background:rgba(255,215,0,0.6);border-radius:50%;pointer-events:none;z-index:1;animation:float 8s infinite}
+@keyframes float{0%,100%{transform:translateY(0) translateX(0)}25%{transform:translateY(-30px) translateX(20px)}50%{transform:translateY(-60px) translateX(-20px)}75%{transform:translateY(-30px) translateX(20px)}}
+.container{position:relative;z-index:10;background:rgba(26,31,58,0.85);backdrop-filter:blur(20px);border-radius:2.5rem;padding:3rem;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:2px solid rgba(255,215,0,0.2);max-width:1400px;width:95%;margin:0 auto 2rem auto}
+.header{text-align:center;margin-bottom:2.5rem;animation:slideDown .8s ease-out}
+@keyframes slideDown{from{opacity:0;transform:translateY(-40px)}to{opacity:1;transform:translateY(0)}}
+.title{font-size:3.5rem;background:linear-gradient(135deg,#ffd700 0%,#ffed4e 25%,#ffd700 50%,#ff8c42 75%,#ffd700 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.8rem;animation:shimmer 4s linear infinite;font-weight:900;letter-spacing:2px}
+@keyframes shimmer{0%{background-position:0% center}100%{background-position:200% center}}
+.subtitle{font-size:1.4rem;color:#87ceeb;animation:fadeIn 1s ease-out .3s both;text-shadow:0 0 20px rgba(135,206,235,0.4);font-weight:500}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.canvas-container{position:relative;display:flex;flex-direction:column;align-items:center;animation:scaleIn .6s ease-out .4s both}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.canvas-label{display:flex;align-items:center;justify-content:center;font-size:2rem;background:linear-gradient(135deg,#ff6b9d 0%,#c44569 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2rem;font-weight:bold}
+.pencil-icon{font-size:2.8rem;margin-right:1rem;animation:bounce 1.5s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0) rotate(0deg)}25%{transform:translateY(-12px) rotate(-8deg)}75%{transform:translateY(-6px) rotate(8deg)}}
+.tools-container{display:grid;grid-template-columns:1fr;gap:2rem;margin-bottom:2.5rem;padding:2.5rem;background:linear-gradient(135deg,rgba(255,215,0,0.08) 0%,rgba(139,92,246,0.08) 100%);border-radius:2rem;border:2px solid rgba(255,215,0,0.3);box-shadow:0 10px 40px rgba(0,0,0,0.3);width:100%;max-width:900px}
+.tool-row{display:flex;gap:2.5rem;justify-content:center;align-items:center;flex-wrap:wrap}
+.tool-group{display:flex;flex-direction:column;align-items:center;gap:.8rem;padding:1.2rem;background:rgba(26,31,58,0.6);border-radius:1.5rem;border:1px solid rgba(255,215,0,0.2);transition:all .3s ease;box-shadow:0 5px 20px rgba(0,0,0,0.2)}
+.tool-group:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(255,215,0,0.3);border-color:rgba(255,215,0,0.4)}
+.tool-label{color:#87ceeb;font-size:1.2rem;font-weight:bold;text-shadow:0 0 15px rgba(135,206,235,0.6);letter-spacing:1px}
+.color-picker-wrapper{position:relative;width:80px;height:80px;border-radius:50%;overflow:hidden;border:4px solid #ffd700;box-shadow:0 0 30px rgba(255,215,0,0.5);cursor:pointer;transition:all .4s ease}
+.color-picker-wrapper:hover{transform:scale(1.15) rotate(10deg);box-shadow:0 0 50px rgba(255,215,0,0.8)}
+#colorPicker{width:100%;height:100%;border:none;cursor:pointer}
+.slider-wrapper{display:flex;flex-direction:column;align-items:center;gap:.8rem;min-width:200px}
+#strokeWidth{width:200px;height:10px;border-radius:10px;background:linear-gradient(90deg,#667eea 0%,#764ba2 25%,#f093fb 50%,#4facfe 75%,#00f2fe 100%);outline:none;cursor:pointer}
+#strokeWidth::-webkit-slider-thumb{appearance:none;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ffd700 0%,#ff6b6b 100%);border:3px solid #fff;cursor:pointer;box-shadow:0 0 15px rgba(255,215,0,0.7)}
+#strokeWidth::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ffd700 0%,#ff6b6b 100%);border:3px solid #fff;cursor:pointer;box-shadow:0 0 15px rgba(255,215,0,0.7)}
+.stroke-preview{width:200px;height:50px;background:linear-gradient(135deg,#ffffff 0%,#f0f0f0 100%);border-radius:15px;border:3px solid #ffd700;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 15px rgba(0,0,0,0.1)}
+.stroke-line{height:5px;width:80%;border-radius:10px;transition:all .3s ease}
+.upload-group{min-width:250px}
+.upload-wrapper{position:relative;width:100%;padding:1.5rem;background:linear-gradient(135deg,rgba(139,92,246,0.2) 0%,rgba(124,58,237,0.2) 100%);border:3px dashed rgba(139,92,246,0.5);border-radius:1.5rem;cursor:pointer;transition:all .4s ease;text-align:center}
+.upload-wrapper:hover{border-color:rgba(139,92,246,0.9);background:linear-gradient(135deg,rgba(139,92,246,0.3) 0%,rgba(124,58,237,0.3) 100%);transform:translateY(-3px)}
+.upload-icon{font-size:3rem;margin-bottom:.5rem}
+.upload-text{color:#c4b5fd;font-weight:600;font-size:1.1rem}
+#imageUpload{display:none}
+.tool-button{padding:1rem 2rem;border:none;border-radius:1.5rem;color:white;font-weight:bold;font-size:1.2rem;cursor:pointer;transition:all .4s ease;box-shadow:0 8px 20px rgba(0,0,0,0.3);position:relative;overflow:hidden}
+.tool-button:disabled{opacity:.4;cursor:not-allowed}
+.eraser-button{background:linear-gradient(135deg,#a855f7 0%,#7c3aed 50%,#6d28d9 100%)}
+.eraser-button:hover:not(:disabled){transform:scale(1.08) translateY(-3px)}
+.eraser-button.active{background:linear-gradient(135deg,#ef4444 0%,#dc2626 50%,#b91c1c 100%)}
+.undo-button{background:linear-gradient(135deg,#3b82f6 0%,#2563eb 50%,#1d4ed8 100%)}
+.undo-button:hover:not(:disabled){transform:scale(1.08) translateY(-3px)}
+.redo-button{background:linear-gradient(135deg,#10b981 0%,#059669 50%,#047857 100%)}
+.redo-button:hover:not(:disabled){transform:scale(1.08) translateY(-3px)}
+.download-button{background:linear-gradient(135deg,#f59e0b 0%,#d97706 50%,#b45309 100%)}
+.download-button:hover:not(:disabled){transform:scale(1.08) translateY(-3px)}
+.canvas-wrapper{position:relative;display:inline-block;touch-action:none}
+#digitCanvas{border:6px solid #ffd700;border-radius:2rem;box-shadow:0 0 60px rgba(255,215,0,0.5);background:white;cursor:crosshair;max-width:100%;height:auto;display:block}
+.button-container{display:flex;gap:2.5rem;margin-top:3rem;justify-content:center;flex-wrap:wrap}
+.button{padding:1.5rem 4rem;border:none;border-radius:2.5rem;color:white;font-weight:900;font-size:1.5rem;cursor:pointer;transition:all .4s ease;box-shadow:0 15px 35px rgba(0,0,0,0.4);text-transform:uppercase}
+.button:disabled{opacity:.4;cursor:not-allowed}
+.clear-button{background:linear-gradient(135deg,#ef4444 0%,#dc2626 50%,#b91c1c 100%)}
+.clear-button:hover:not(:disabled){transform:scale(1.1) rotate(-2deg) translateY(-5px)}
+.recognize-button{background:linear-gradient(135deg,#10b981 0%,#059669 50%,#047857 100%)}
+.recognize-button:hover:not(:disabled){transform:scale(1.1) rotate(2deg) translateY(-5px)}
+#predictionDisplay{text-align:center;transition:all .6s ease;margin-top:3rem}
+.prediction-hidden{opacity:0;transform:scale(.7) translateY(-30px);max-height:0;overflow:hidden}
+.prediction-visible{opacity:1;transform:scale(1) translateY(0);max-height:600px}
+.prediction-content{background:linear-gradient(135deg,rgba(255,215,0,0.15) 0%,rgba(255,107,157,0.15) 50%,rgba(139,92,246,0.15) 100%);border-radius:2.5rem;padding:3rem;border:4px solid #ffd700;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.prediction-text{font-size:2rem;background:linear-gradient(135deg,#ff6b9d 0%,#c44569 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1.5rem;font-weight:bold}
+.prediction-value{display:block;background:linear-gradient(135deg,#ffd700 0%,#ff8c42 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-size:4.5rem;margin-top:2rem;word-wrap:break-word;font-weight:900}
+.emoji-celebration{font-size:4rem;display:inline-block;animation:spin 2.5s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:1.8rem;height:1.8rem;border:4px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-left:.8rem}
+@media(max-width:968px){.container{padding:2rem}.title{font-size:2.5rem}.subtitle{font-size:1.1rem}.button{padding:1.2rem 2.5rem;font-size:1.2rem}.canvas-label{font-size:1.5rem}.prediction-value{font-size:3rem}.tool-row{flex-direction:column;gap:1.5rem}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1 class="title">✨ Magic Writing Board ✨</h1>
+<p class="subtitle">🎨 Draw, Upload, Create & Watch the Magic Happen! 🌟</p>
+</div>
+<div class="canvas-container">
+<div class="canvas-label"><span class="pencil-icon">✏️</span>Your Creative Space!</div>
+<div class="tools-container">
+<div class="tool-row">
+<div class="tool-group">
+<div class="tool-label">🎨 Color</div>
+<div class="color-picker-wrapper">
+<input type="color" id="colorPicker" value="#2563eb">
+</div>
+</div>
+<div class="tool-group">
+<div class="tool-label">✏️ Brush Size</div>
+<div class="slider-wrapper">
+<input type="range" id="strokeWidth" min="5" max="80" value="18">
+<div class="stroke-preview">
+<div class="stroke-line" id="strokePreview"></div>
+</div>
+</div>
+</div>
+<div class="tool-group upload-group">
+<div class="tool-label">📁 Upload Image</div>
+<label for="imageUpload" class="upload-wrapper">
+<div class="upload-icon">📤</div>
+<div class="upload-text">Click to Upload</div>
+<input type="file" id="imageUpload" accept="image/*">
+</label>
+</div>
+</div>
+<div class="tool-row">
+<button id="eraserButton" class="tool-button eraser-button">🧹 Eraser</button>
+<button id="undoButton" class="tool-button undo-button" disabled>↩️ Undo</button>
+<button id="redoButton" class="tool-button redo-button" disabled>↪️ Redo</button>
+<button id="downloadButton" class="tool-button download-button">💾 Save</button>
+</div>
+</div>
+<div class="canvas-wrapper">
+<canvas id="digitCanvas" width="900" height="650"></canvas>
+</div>
+</div>
+<div class="button-container">
+<button id="clearButton" class="button clear-button">🗑️ Clear All</button>
+<button id="recognizeButton" class="button recognize-button">🔮 Recognize Magic!</button>
+</div>
+<div id="predictionDisplay" class="prediction-hidden">
+<div class="prediction-content">
+<span class="emoji-celebration">🎉</span>
+<div class="prediction-text"><strong>✨ I Discovered:</strong></div>
+<span id="predictionValue" class="prediction-value"></span>
+<div style="margin-top:2rem;font-size:1.8rem;">
+<span class="emoji-celebration" style="animation-delay:.2s;">⭐</span>
+<span class="emoji-celebration" style="animation-delay:.4s;">🌈</span>
+<span class="emoji-celebration" style="animation-delay:.6s;">✨</span>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+function createStars(){
+for(let i=0;i<60;i++){
+const star=document.createElement('div');
+star.className='star';
+star.style.width=Math.random()*4+1+'px';
+star.style.height=star.style.width;
+star.style.left=Math.random()*100+'%';
+star.style.top=Math.random()*100+'%';
+star.style.animationDelay=Math.random()*3+'s';
+document.body.appendChild(star);
+}
+for(let i=0;i<30;i++){
+const particle=document.createElement('div');
+particle.className='floating-particle';
+particle.style.left=Math.random()*100+'%';
+particle.style.top=Math.random()*100+'%';
+particle.style.animationDelay=Math.random()*8+'s';
+particle.style.animationDuration=(Math.random()*6+6)+'s';
+document.body.appendChild(particle);
+}
+}
+createStars();
+
+// Correct Class Name: MathBoard
+class MathBoard {
+constructor(k){
+this.apiKey=k;
+this.apiUrl="https://vision.googleapis.com/v1/images:annotate";
+this.canvas=document.getElementById("digitCanvas");
+this.ctx=this.canvas.getContext("2d");
+this.clearButton=document.getElementById("clearButton");
+this.recognizeButton=document.getElementById("recognizeButton");
+this.predictionValue=document.getElementById("predictionValue");
+this.colorPicker=document.getElementById("colorPicker");
+this.strokeWidthSlider=document.getElementById("strokeWidth");
+this.strokePreview=document.getElementById("strokePreview");
+this.eraserButton=document.getElementById("eraserButton");
+this.undoButton=document.getElementById("undoButton");
+this.redoButton=document.getElementById("redoButton");
+this.downloadButton=document.getElementById("downloadButton");
+this.imageUpload=document.getElementById("imageUpload");
+this.history=[];
+this.redoStack=[];
+this.currentColor="#2563eb";
+this.isErasing=false;
+this.eraserSize=60;
+this.isDrawing=false;
+this.lastPoint=null;
+this.initCanvas();
+this.addEventListeners();
+this.updateStrokePreview();
+
+// Bind the factorial function to the class instance
+this.factorial = this.factorial.bind(this);
+}
+
+initCanvas(){
+this.ctx.fillStyle="white";
+this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+this.ctx.strokeStyle=this.currentColor;
+this.ctx.lineWidth=18;
+this.ctx.lineCap="round";
+this.ctx.lineJoin="round";
+this.saveState();
+}
+
+saveState(){
+this.history.push(this.canvas.toDataURL());
+if(this.history.length>50)this.history.shift();
+this.redoStack=[];
+this.updateUndoRedoButtons();
+}
+
+undo(){
+if(this.history.length>1){
+this.redoStack.push(this.history.pop());
+this.loadState(this.history[this.history.length-1]);
+this.updateUndoRedoButtons();
+}
+}
+
+redo(){
+if(this.redoStack.length>0){
+const state=this.redoStack.pop();
+this.history.push(state);
+this.loadState(state);
+this.updateUndoRedoButtons();
+}
+}
+
+loadState(url){
+const img=new Image();
+img.onload=()=>{
+this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+this.ctx.drawImage(img,0,0);
+};
+img.src=url;
+}
+
+updateUndoRedoButtons(){
+this.undoButton.disabled=this.history.length<=1;
+this.redoButton.disabled=this.redoStack.length===0;
+}
+
+updateStrokePreview(){
+const w=this.strokeWidthSlider.value;
+this.strokePreview.style.height=Math.max(5,w/3)+'px';
+this.strokePreview.style.backgroundColor=this.isErasing?'#f0f0f0':this.currentColor;
+}
+
+toggleEraser(){
+this.isErasing=!this.isErasing;
+if(this.isErasing){
+this.ctx.strokeStyle='white';
+this.ctx.lineWidth=this.eraserSize;
+this.eraserButton.classList.add('active');
+this.eraserButton.textContent='✏️ Pen';
+}else{
+this.ctx.strokeStyle=this.currentColor;
+this.ctx.lineWidth=this.strokeWidthSlider.value;
+this.eraserButton.classList.remove('active');
+this.eraserButton.textContent='🧹 Eraser';
+}
+this.updateStrokePreview();
+}
+
+downloadDrawing(){
+const link=document.createElement('a');
+link.download='drawing-'+Date.now()+'.png';
+link.href=this.canvas.toDataURL('image/png');
+link.click();
+}
+
+handleImageUpload(e){
+const file=e.target.files[0];
+if(!file)return;
+const reader=new FileReader();
+reader.onload=(ev)=>{
+const img=new Image();
+img.onload=()=>{
+const scale=Math.min(this.canvas.width/img.width,this.canvas.height/img.height,1);
+const x=(this.canvas.width-img.width*scale)/2;
+const y=(this.canvas.height-img.height*scale)/2;
+this.ctx.drawImage(img,x,y,img.width*scale,img.height*scale);
+this.saveState();
+};
+img.src=ev.target.result;
+};
+reader.readAsDataURL(file);
+}
+
+addEventListeners(){
+this.canvas.addEventListener("mousedown",(e)=>this.startDrawing(e));
+this.canvas.addEventListener("mousemove",(e)=>this.draw(e));
+this.canvas.addEventListener("mouseup",()=>this.stopDrawing());
+this.canvas.addEventListener("mouseleave",()=>this.stopDrawing());
+
+this.canvas.addEventListener("touchstart",(e)=>{
+e.preventDefault();
+e.stopPropagation();
+this.startDrawingTouch(e);
+});
+this.canvas.addEventListener("touchmove",(e)=>{
+e.preventDefault();
+e.stopPropagation();
+this.drawTouch(e);
+});
+this.canvas.addEventListener("touchend",()=>this.stopDrawing());
+this.canvas.addEventListener("touchcancel",()=>this.stopDrawing());
+
+this.clearButton.addEventListener("click",()=>this.clearCanvas());
+this.recognizeButton.addEventListener("click",()=>this.recognize());
+this.colorPicker.addEventListener("input",(e)=>{
+this.currentColor=e.target.value;
+if(!this.isErasing)this.ctx.strokeStyle=this.currentColor;
+this.updateStrokePreview();
+});
+this.strokeWidthSlider.addEventListener("input",(e)=>{
+if(!this.isErasing)this.ctx.lineWidth=e.target.value;
+this.updateStrokePreview();
+});
+this.eraserButton.addEventListener("click",()=>this.toggleEraser());
+this.undoButton.addEventListener("click",()=>this.undo());
+this.redoButton.addEventListener("click",()=>this.redo());
+this.downloadButton.addEventListener("click",()=>this.downloadDrawing());
+this.imageUpload.addEventListener("change",(e)=>this.handleImageUpload(e));
+}
+
+startDrawing(e){
+this.isDrawing=true;
+this.lastPoint=this.getCoordinates(e);
+}
+
+startDrawingTouch(e){
+if(e.touches.length>0){
+this.isDrawing=true;
+this.lastPoint=this.getTouchCoordinates(e);
+}
+}
+
+draw(e){
+if(!this.isDrawing)return;
+const p=this.getCoordinates(e);
+this.drawLine(p);
+}
+
+drawTouch(e){
+if(!this.isDrawing||e.touches.length===0)return;
+const p=this.getTouchCoordinates(e);
+this.drawLine(p);
+}
+
+drawLine(p){
+this.ctx.beginPath();
+this.ctx.moveTo(this.lastPoint.x,this.lastPoint.y);
+this.ctx.lineTo(p.x,p.y);
+this.ctx.stroke();
+this.lastPoint=p;
+}
+
+stopDrawing(){
+if(this.isDrawing){
+this.isDrawing=false;
+this.saveState();
+}
+}
+
+clearCanvas(){
+this.ctx.fillStyle="white";
+this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+this.predictionValue.textContent="";
+const disp=document.getElementById("predictionDisplay");
+disp.classList.add("prediction-hidden");
+disp.classList.remove("prediction-visible");
+this.saveState();
+}
+
+// --- MATH FUNCTIONS ---
+
+// Function: factorial()
+factorial(n) {
+    if (n < 0 || n > 170 || !Number.isInteger(n)) return NaN;
+    if (n === 0) return 1;
+    let res = 1;
+    for (let i = 2; i <= n; i++) res *= i;
+    return res;
+}
+
+// Helper: solveQuadratic (used by processQuadratic)
+solveQuadratic(a, b, c) {
+    const d = b * b - 4 * a * c; // Discriminant
+    const originalEq = `${a !== 1 ? a : ''}x² ${b >= 0 ? '+' : ''}${b}x ${c >= 0 ? '+' : ''}${c} = 0`.replace(/\+\s*-/g, '- ').replace(/1x/g, 'x').replace(/\s*0x|\+0|=0/g, '');
+
+    if (d < 0) {
+        const real = (-b / (2 * a)).toFixed(4);
+        const imag = (Math.sqrt(-d) / (2 * a)).toFixed(4);
+        return {
+            equation: originalEq,
+            result: `Roots: x = ${real} ± ${imag}i (Complex Roots)`
+        };
+    } else if (d === 0) {
+        const x = (-b / (2 * a)).toFixed(4);
+        return {
+            equation: originalEq,
+            result: `Root: x = ${x} (Single Real Root)`
+        };
+    } else {
+        const x1 = ((-b + Math.sqrt(d)) / (2 * a)).toFixed(4);
+        const x2 = ((-b - Math.sqrt(d)) / (2 * a)).toFixed(4);
+        return {
+            equation: originalEq,
+            result: `Roots: x₁ = ${x1}, x₂ = ${x2}`
+        };
+    }
+}
+
+// Function: processQuadratic()
+processQuadratic(text) {
+    // Clean the text first, removing underscores often created by OCR when parsing handwriting
+    text = text.replace(/_/g, '');
+    
+    const quadRegex = /([+-]?\s*\d*\s*(?:[xX]|\*|\^)?\s*(?:2|²))?\s*([+-]?\s*\d*\s*[xX])?\s*([+-]?\s*\d+)?\s*=\s*0/;
+    const match = text.match(quadRegex);
+
+    if (match) {
+        const getCoeff = (term, defaultCoeff) => {
+            if (!term) return 0;
+            term = term.trim().replace(/\s/g, '').replace(/[xX]\*|\*|[xX]|\^|2|²|=0/g, '');
+
+            if (term === '+') return defaultCoeff; 
+            if (term === '-' || term === '-1') return -defaultCoeff;
+            if (term === '' || term === '1') return defaultCoeff;
+            
+            return parseFloat(term) || 0;
+        };
+
+        const a = getCoeff(match[1], 1);
+        const b = getCoeff(match[2], 1);
+        const c = getCoeff(match[3], 0);
+
+        if (a === 0) return null;
+
+        return this.solveQuadratic(a, b, c);
+    }
+    return null;
+}
+
+// Function: processCalculus() (Placeholder for symbolic ops)
+processCalculus(text) {
+    text = text.toLowerCase().replace(/\s/g, '');
+    
+    if (text.startsWith('d/dx') || text.startsWith('derivative')) {
+        return { type: 'Derivative', result: 'Symbolic Derivative Calculation Not Supported' };
+    }
+    if (text.startsWith('∫') || text.startsWith('integral')) {
+        return { type: 'Integral', result: 'Symbolic Integral Calculation Not Supported' };
+    }
+    return null;
+}
+
+// --- MAIN RECOGNIZE FUNCTION ---
+async recognize(){
+this.recognizeButton.disabled=true;
+this.recognizeButton.innerHTML='🔮 Working Magic...<span class="spinner"></span>';
+
+let resultText = "Try writing bigger! 🤔";
+
+// Check if a valid API key is present
+if (!this.apiKey || this.apiKey === "YOUR_API_KEY_HERE" || !this.apiKey.startsWith("AIzaSy")) {
+    resultText = "Error: Please replace the placeholder API key in the code with a valid Google Vision API key.";
+    
+    // Display error immediately without attempting API call
+    const disp=document.getElementById("predictionDisplay");
+    disp.classList.remove("prediction-hidden");
+    disp.classList.add("prediction-visible");
+    this.recognizeButton.disabled=false;
+    this.recognizeButton.textContent="🔮 Recognize Magic!";
+    this.predictionValue.textContent = resultText;
+    return;
+}
+
+const imageData=this.canvas.toDataURL("image/png");
+const base64Image=imageData.split(",")[1];
+const requestBody={requests:[{image:{content:base64Image},features:[{type:"TEXT_DETECTION"}]}]};
+
+try{
+const response=await fetch(`${this.apiUrl}?key=${this.apiKey}`,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(requestBody)
+});
+
+const data=await response.json();
+
+let detectedText="";
+if(data.responses && data.responses[0].fullTextAnnotation){
+detectedText=data.responses[0].fullTextAnnotation.text;
+}else if(data.responses && data.responses[0].textAnnotations && data.responses[0].textAnnotations.length>0){
+detectedText=data.responses[0].textAnnotations[0].description;
+}
+detectedText=detectedText.trim();
+
+
+if (detectedText) {
+     const originalText = detectedText;
+     let lowerText = originalText.toLowerCase();
+
+     // 1. Check for Quadratic Equation
+     const quadraticResult = this.processQuadratic(lowerText);
+     if (quadraticResult) {
+     resultText = `Quadratic Equation: ${quadraticResult.equation}\n${quadraticResult.result}`;
+     } 
+
+     // 2. Check for Calculus (Derivatives/Integrals)
+     else if (
+     lowerText.includes('d/dx') ||
+     lowerText.includes('∫') ||
+ lowerText.includes('integral') ||
+ lowerText.includes('derivative')
+     ) {
+ const calculusResult = this.processCalculus(lowerText);
+ if (calculusResult) {
+ resultText = `${originalText}\n${calculusResult.result}`;
+ } else {
+ resultText = originalText;
+ }
+ }
+
+ // 3. Solve as Standard Calculation (including power, root, log, trig, factorial)
+ else {
+ let expression = lowerText;
+ 
+ // --- START OF ENGLISH TEXT GUARD ---
+ // Check if the text contains numbers or common math operators
+ const mathPattern = /[\d+\-*/().!^√=]/;
+
+ if (!mathPattern.test(expression)) {
+    // If no math content is found, display the text itself with an explanation
+    resultText = `I detected: "${originalText}". This is not a math problem I can solve.`;
+ } else {
+    // If it looks like math, proceed with pre-processing and evaluation
+
+    // Pre-process for easy parsing:
+    expression = expression
+      .replace(/x/gi, '*') // Multiplication (x, X)
+      .replace(/÷/g, '/')  // Division
+      .replace(/\^/g, '**') // Power
+      .replace(/√(\d+)/g, 'sqrt($1)') // Simple root symbol
+      .replace(/,/g, '.') // Decimal comma
+      .replace(/\s/g, ''); // Remove all spaces
+
+    // Factorial: Replace N! with factorial(N)
+    expression = expression.replace(/(\d+)!/g, 'factorial($1)');
+
+    // Logarithms and Roots: Convert to Math object format
+    expression = expression
+      .replace(/log10\(/g, 'Math.log10(')
+      .replace(/log\(/g, 'Math.log10(') // Assume base 10 for 'log'
+      .replace(/ln\(/g, 'Math.log(') // Natural log
+      .replace(/sqrt\(/g, 'Math.sqrt(')
+      // Trigonometry: Converts degrees to radians before calculation
+      .replace(/sin\(([^)]+)\)/g, '(Math.sin((parseFloat($1)) * Math.PI / 180))')
+      .replace(/cos\(([^)]+)\)/g, '(Math.cos((parseFloat($1)) * Math.PI / 180))')
+      .replace(/tan\(([^)]+)\)/g, '(Math.tan((parseFloat($1)) * Math.PI / 180))');
+
+    try {
+      // Inject helper functions (factorial) and Math object into the scope of the evaluation
+      const fn = new Function('Math', 'factorial', `return ${expression}`);
+      const result = fn(Math, this.factorial);
+
+      if (!isNaN(result) && isFinite(result)) {
+        // Format the result cleanly
+        const formattedResult = (result % 1 !== 0)
+          ? result.toFixed(6).replace(/\.?0+$/, '')
+          : result;
+        resultText = `${originalText} = ${formattedResult}`;
+      } else {
+        resultText = originalText + " = Invalid input or calculation result.";
+      }
+    } catch (e) {
+      resultText = originalText + " (Syntax Error)"
+    }
+ }
+ // --- END OF ENGLISH TEXT GUARD ---
+
+ }
+
+ this.predictionValue.textContent = resultText;
+
+ const disp = document.getElementById("predictionDisplay");
+ disp.classList.remove("prediction-hidden");
+ disp.classList.add("prediction-visible");
+ setTimeout(() => disp.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
+}
+} catch (err) {
+ console.error("Error communicating with Google Vision API:", err);
+ this.predictionValue.textContent = "API Error. Check console or API key.";
+}
+this.recognizeButton.disabled = false;
+this.recognizeButton.textContent = "🔮 Recognize Magic!";
+} 
+
+// Function: getCoordinates()
+getCoordinates(e) {
+    const r = this.canvas.getBoundingClientRect();
+    const scaleX = this.canvas.width / r.width;
+    const scaleY = this.canvas.height / r.height;
+    return {
+        x: (e.clientX - r.left) * scaleX,
+        y: (e.clientY - r.top) * scaleY
+    };
+}
+
+// Function: getTouchCoordinates()
+getTouchCoordinates(e) {
+    if (e.touches.length === 0) return this.lastPoint;
+    const r = this.canvas.getBoundingClientRect();
+    const scaleX = this.canvas.width / r.width;
+    const scaleY = this.canvas.height / r.height;
+    const touch = e.touches[0];
+    return {
+        x: (touch.clientX - r.left) * scaleX,
+        y: (touch.clientY - r.top) * scaleY
+    };
+}
+
+} // closes class
+
+document.addEventListener("DOMContentLoaded", () => {
+    // IMPORTANT: Remember to replace this with your actual Google Vision API Key!
+    // The key provided below is likely invalid for security reasons.
+    new MathBoard("AIzaSyAECbW_sAgR_UXxaflxcvYfjAZZhJLCmPk");
+});
+</script>
+</body>
+</html>
